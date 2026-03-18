@@ -202,7 +202,7 @@
     },
     {
       "ConsoleName": "Nintendo Wii",
-      "ConsoleIconKey": "nintendo_wii_icon",
+      "ConsoleIconKey": "nintendo_wii_icon_v2",
       "Games": [
         {
           "GameName": "Home",
@@ -250,7 +250,7 @@
         },
         {
           "GameName": "The Legend of Zelda: Twilight Princess",
-          "ImageIconKey": "zelda_tp_wii"
+          "ImageIconKey": "zelda_tp_hd"
         },
         {
           "GameName": "Wii Sports",
