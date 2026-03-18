@@ -202,11 +202,11 @@
     },
     {
       "ConsoleName": "Nintendo Wii",
-      "ConsoleIconKey": "nintendo_wii_icon_v2",
+      "ConsoleIconKey": "nintendo_wii_icon",
       "Games": [
         {
           "GameName": "Home",
-          "ImageIconKey": "nintendo_wii_icon"
+          "ImageIconKey": "nintendo_wii_icon_v2"
         },
         {
           "GameName": "Animal Crossing: City Folk",
