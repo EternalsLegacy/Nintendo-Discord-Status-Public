@@ -268,7 +268,7 @@
     },
     {
       "ConsoleName": "Nintendo 3DS",
-      "ConsoleIconKey": "nintendo_3ds_icon",
+      "ConsoleIconKey": "nintendo_3ds_icon_v2",
       "Games": [
         {
           "GameName": "Home",
@@ -326,7 +326,7 @@
       "Games": [
         {
           "GameName": "Home",
-          "ImageIconKey": "nintendo_ds_icon"
+          "ImageIconKey": "nintendo_ds_icon_v2"
         },
         {
           "GameName": "Animal Crossing: Wild World",
