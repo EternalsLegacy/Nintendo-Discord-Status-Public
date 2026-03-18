@@ -27,7 +27,7 @@ public class MainWindow : Window
 {
     #region Variables
 
-    private const string GithubImagesUrl = "https://raw.githubusercontent.com/EternalsLegacy/NintendoDiscordStatus/main/images/";
+    private const string GithubImagesUrl = "https://raw.githubusercontent.com/EternalsLegacy/Nintendo-Discord-Status-Public/main/images/";
     private readonly DiscordService AppDiscordService;
     private GamesLibModel Library = new GamesLibModel();
     private List<PresetModel> Presets = new List<PresetModel>();
@@ -324,7 +324,7 @@ public class MainWindow : Window
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Vorschau] Fehler beim Laden des Bildes: {ex.Message}");
+            Console.WriteLine($"[Preview] Error loading the image: {ex.Message}");
             Avalonia.Threading.Dispatcher.UIThread.Post(() => PreviewMainImage.Source = null);
         }
     }
