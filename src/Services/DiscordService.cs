@@ -68,7 +68,8 @@ public class DiscordService : IDisposable
         {
             Details = string.IsNullOrWhiteSpace(GameName) ? "Playing" : GameName,
             State = string.IsNullOrWhiteSpace(FinalState) ? null : FinalState,
-            Timestamps = GameStartTime
+            Timestamps = GameStartTime,
+            StatusDisplay = StatusDisplayType.Details
         };
 
         bool HasLargeImage = !string.IsNullOrWhiteSpace(LargeImageKey);
