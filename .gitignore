@@ -1,0 +1,36 @@
+# ==================================
+# .NET & Avalonia Build Folders
+# ==================================
+bin/
+obj/
+
+# ==================================
+# App Specific Local Data
+# ==================================
+presets.json
+preset.json
+
+# ==================================
+# Visual Studio & IDEs
+# ==================================
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.user
+*.suo
+*.sln.docstates
+
+# ==================================
+# OS Generated Files
+# ==================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
