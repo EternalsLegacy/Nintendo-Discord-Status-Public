@@ -13,6 +13,14 @@
           "ImageIconKey": "acnh"
         },
         {
+          "GameName": "Donkey Kong Country Returns",
+          "ImageIconKey": "dkcr_wii"
+        },
+        {
+          "GameName": "Donkey Kong Country: Tropical Freeze",
+          "ImageIconKey": "dkc_tf_wiiu"
+        },
+        {
           "GameName": "Fire Emblem: Three Houses",
           "ImageIconKey": "fe3h_v2"
         },
