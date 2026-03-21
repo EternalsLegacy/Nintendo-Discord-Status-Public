@@ -36,5 +36,6 @@
     <None Update="app_icon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <AvaloniaResource Include="app_icon.ico" />
   </ItemGroup>
 </Project>

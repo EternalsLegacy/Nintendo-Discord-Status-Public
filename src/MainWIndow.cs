@@ -79,6 +79,18 @@ public class MainWindow : Window
             this.Icon = new WindowIcon(IconPath);
         }
 
+        try
+        {
+            using (var Stream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://NintendoDiscordStatus/app_icon.ico")))
+            {
+                this.Icon = new WindowIcon(Stream);
+            }
+        }
+        catch (Exception Ex)
+        {
+            Console.WriteLine($"[Build] Error loading the app icon from resource: {Ex.Message}");
+        }
+
         AppDiscordService = new DiscordService();
         AppDiscordService.InitializeDiscordClient("1482829273164284106");
 
