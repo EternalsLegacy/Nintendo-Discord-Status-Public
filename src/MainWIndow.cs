@@ -859,6 +859,14 @@ public class MainWindow : Window
             .Foreground(TextGrayBrush)
             .Col(0);
 
+        CheckUpdatesFooterButton = new Button()
+            .Content($"v{UpdateService.CurrentVersionString}")
+            .Background(Brushes.Transparent)
+            .Foreground(TextGrayBrush)
+            .FontSize(11)
+            .HorizontalAlignment(HorizontalAlignment.Center)
+            .Col(1);
+
         SavePresetButton = new Button()
             .Content("Save Current")
             .Background(Brushes.Transparent)
@@ -870,6 +878,7 @@ public class MainWindow : Window
             .Margin(new Thickness(0, 10, 0, 0))
             .Children(
                 PresetButton,
+                CheckUpdatesFooterButton,
                 SavePresetButton
             );
     }

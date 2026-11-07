@@ -21,8 +21,8 @@ public class UpdateService
 {
     #region Constants
 
-    public static readonly Version CurrentVersion = new Version(1, 1, 0);
-    public const string CurrentVersionString = "1.1.0";
+    public static readonly Version CurrentVersion = new Version(1, 1, 1);
+    public const string CurrentVersionString = "1.1.1";
     private const string GitHubApiUrl = "https://api.github.com/repos/EternalsLegacy/Nintendo-Discord-Status-Public/releases/latest";
 
     #endregion
