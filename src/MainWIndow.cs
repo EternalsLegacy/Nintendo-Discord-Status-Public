@@ -47,11 +47,24 @@ public class MainWindow : Window
     private TextBlock StatusIndicatorText = null!;
     private Avalonia.Controls.Shapes.Ellipse StatusIndicatorDot = null!;
     private Button UpdateButton = null!;
+    private Button StopButton = null!;
     private Button PresetButton = null!;
     private Button SavePresetButton = null!;
 
     private Panel PresetOverlay = null!;
     private ListBox PresetListBox = null!;
+
+    private readonly UpdateService AppUpdateService = new UpdateService();
+    private UpdateModel? PendingUpdate;
+
+    private Panel UpdateOverlay = null!;
+    private TextBlock UpdateTitleText = null!;
+    private TextBlock UpdateVersionSubtext = null!;
+    private TextBlock UpdateChangelogText = null!;
+    private TextBlock UpdateStatusText = null!;
+    private Button UpdateInstallButton = null!;
+    private Button UpdateCloseButton = null!;
+    private Button CheckUpdatesFooterButton = null!;
 
     private readonly ISolidColorBrush WindowBackgroundBrush = SolidColorBrush.Parse("#18181A");
     private readonly ISolidColorBrush CardBackgroundBrush = SolidColorBrush.Parse("#252529");
@@ -110,13 +123,15 @@ public class MainWindow : Window
                                 CreateFooter()
                             )
                     ),
-                CreatePresetOverlay()
+                CreatePresetOverlay(),
+                CreateUpdateOverlay()
             );
 
         LoadLibraryData();
         LoadPresetsData();
         BindEvents();
         TriggerDefaultState();
+        CheckForUpdatesOnStartup();
     }
 
     #endregion
@@ -139,7 +154,7 @@ public class MainWindow : Window
         GameCombo = CreateStyledAutoCompleteBox();
 
         DetailsBox = CreateStyledTextBox("Exploring Hyrule", false);
-        StateBox = CreateStyledTextBox("Singleplayer", true);
+        StateBox = CreateStyledTextBox("Singleplayer", false);
 
         PreviewMainImage = new Image() { Stretch = Stretch.UniformToFill };
 
@@ -206,8 +221,10 @@ public class MainWindow : Window
         StateBox.TextChanged += OnInputTextChanged;
 
         UpdateButton.Click += OnUpdateClicked;
+        StopButton.Click += OnStopClicked;
         PresetButton.Click += OnOpenPresetsClicked;
         SavePresetButton.Click += OnSaveCurrentClicked;
+        CheckUpdatesFooterButton.Click += OnCheckUpdatesClicked;
     }
 
     private void TriggerDefaultState()
@@ -317,6 +334,32 @@ public class MainWindow : Window
         string FinalKey = ImageKey;
         if (!FinalKey.Contains('.')) FinalKey += ".png";
 
+        // Check local image directory first for offline support and immediate loading
+        string[] searchPaths = new[]
+        {
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images", FinalKey),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "images", FinalKey),
+            Path.Combine(AppContext.BaseDirectory, "images", FinalKey),
+            Path.Combine(Environment.CurrentDirectory, "images", FinalKey)
+        };
+
+        foreach (var localPath in searchPaths)
+        {
+            if (File.Exists(localPath))
+            {
+                try
+                {
+                    var localBitmap = new Avalonia.Media.Imaging.Bitmap(localPath);
+                    PreviewMainImage.Source = localBitmap;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Preview] Error loading local image {localPath}: {ex.Message}");
+                }
+            }
+        }
+
         string CacheBuster = $"?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         string Url = FinalKey.StartsWith("http")
             ? FinalKey
@@ -373,12 +416,38 @@ public class MainWindow : Window
         string SmallImageUrl = string.IsNullOrWhiteSpace(SmallKey) ? string.Empty :
             (SmallKey.StartsWith("http") ? SmallKey : $"{GithubImagesUrl}{SmallKey}");
 
-        AppDiscordService.ResetTimer();
-        AppDiscordService.SetGameStatus(SelectedConsole, SelectedGame, DetailsBox.Text ?? string.Empty, LargeImageUrl, SmallImageUrl);
+        AppDiscordService.SetGameStatus(
+            SelectedConsole, 
+            SelectedGame, 
+            DetailsBox.Text ?? string.Empty, 
+            StateBox.Text ?? string.Empty, 
+            LargeImageUrl, 
+            SmallImageUrl
+        );
 
         StatusIndicatorText.Text = "RPC is Active";
         StatusIndicatorText.Foreground = DiscordGreenBrush;
         StatusIndicatorDot.Fill = DiscordGreenBrush;
+
+        StopButton.IsEnabled = true;
+        StopButton.Foreground = TextWhiteBrush;
+
+        UpdateButton.Content = "Updated!";
+        System.Threading.Tasks.Task.Delay(1500).ContinueWith(_ => 
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateButton.Content = "Update")
+        );
+    }
+
+    private void OnStopClicked(object? Sender, RoutedEventArgs E)
+    {
+        AppDiscordService.ClearStatus();
+
+        StatusIndicatorText.Text = "RPC is Inactive";
+        StatusIndicatorText.Foreground = TextWhiteBrush;
+        StatusIndicatorDot.Fill = SolidColorBrush.Parse("#555555");
+
+        StopButton.IsEnabled = false;
+        StopButton.Foreground = TextGrayBrush;
     }
 
     private void OnSaveCurrentClicked(object? Sender, RoutedEventArgs E)
@@ -448,6 +517,160 @@ public class MainWindow : Window
 
     #region UI Build Methods
 
+    private async void OnCheckUpdatesClicked(object? Sender, RoutedEventArgs E)
+    {
+        CheckUpdatesFooterButton.Content = "Checking...";
+        var update = await AppUpdateService.CheckForUpdateAsync();
+        if (update != null)
+        {
+            CheckUpdatesFooterButton.Content = $"v{UpdateService.CurrentVersionString}";
+            ShowUpdateOverlay(update);
+        }
+        else
+        {
+            CheckUpdatesFooterButton.Content = "Up to date!";
+            _ = System.Threading.Tasks.Task.Delay(2000).ContinueWith(_ =>
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    CheckUpdatesFooterButton.Content = $"v{UpdateService.CurrentVersionString}"));
+        }
+    }
+
+    private async void CheckForUpdatesOnStartup()
+    {
+        await System.Threading.Tasks.Task.Delay(1500);
+        var update = await AppUpdateService.CheckForUpdateAsync();
+        if (update != null)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => ShowUpdateOverlay(update));
+        }
+    }
+
+    private void ShowUpdateOverlay(UpdateModel update)
+    {
+        PendingUpdate = update;
+        UpdateVersionSubtext.Text = $"{update.TagName} - {update.ReleaseName}";
+        UpdateChangelogText.Text = update.Changelog;
+        UpdateStatusText.IsVisible = false;
+        UpdateInstallButton.IsEnabled = true;
+        UpdateCloseButton.IsEnabled = true;
+        UpdateOverlay.IsVisible = true;
+    }
+
+    private Panel CreateUpdateOverlay()
+    {
+        UpdateTitleText = new TextBlock()
+            .Text("UPDATE AVAILABLE")
+            .Foreground(TextWhiteBrush)
+            .FontWeight(FontWeight.Bold)
+            .FontSize(16);
+
+        UpdateVersionSubtext = new TextBlock()
+            .Text(string.Empty)
+            .Foreground(DiscordGreenBrush)
+            .FontSize(13)
+            .FontWeight(FontWeight.SemiBold);
+
+        UpdateChangelogText = new TextBlock()
+            .Text(string.Empty)
+            .Foreground(TextWhiteBrush)
+            .FontSize(13)
+            .TextWrapping(TextWrapping.Wrap);
+
+        UpdateStatusText = new TextBlock()
+            .Text(string.Empty)
+            .Foreground(TextGrayBrush)
+            .FontSize(12)
+            .HorizontalAlignment(HorizontalAlignment.Center)
+            .IsVisible(false);
+
+        UpdateInstallButton = new Button()
+            .Content("Update Now")
+            .HorizontalAlignment(HorizontalAlignment.Stretch)
+            .HorizontalContentAlignment(HorizontalAlignment.Center)
+            .Background(DiscordGreenBrush)
+            .Foreground(TextWhiteBrush)
+            .FontWeight(FontWeight.Bold)
+            .Col(0);
+
+        UpdateInstallButton.Click += async (s, e) =>
+        {
+            if (PendingUpdate == null) return;
+
+            UpdateInstallButton.IsEnabled = false;
+            UpdateCloseButton.IsEnabled = false;
+            UpdateStatusText.IsVisible = true;
+            UpdateStatusText.Text = "Downloading update...";
+
+            try
+            {
+                await AppUpdateService.ApplyUpdateAsync(PendingUpdate, status =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateStatusText.Text = status);
+                });
+            }
+            catch (Exception ex)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    UpdateStatusText.Text = $"Fehler: {ex.Message}";
+                    UpdateInstallButton.IsEnabled = true;
+                    UpdateCloseButton.IsEnabled = true;
+                });
+            }
+        };
+
+        UpdateCloseButton = new Button()
+            .Content("Later")
+            .HorizontalAlignment(HorizontalAlignment.Stretch)
+            .HorizontalContentAlignment(HorizontalAlignment.Center)
+            .Background(InputBackgroundBrush)
+            .Foreground(TextGrayBrush)
+            .Col(2);
+
+        UpdateCloseButton.Click += (s, e) => UpdateOverlay.IsVisible = false;
+
+        UpdateOverlay = new Panel()
+            .Background(new SolidColorBrush(Colors.Black) { Opacity = 0.85 })
+            .IsVisible(false)
+            .ZIndex(110)
+            .Children(
+                new Border()
+                    .Background(CardBackgroundBrush)
+                    .CornerRadius(8)
+                    .Padding(20)
+                    .Width(380)
+                    .VerticalAlignment(VerticalAlignment.Center)
+                    .HorizontalAlignment(HorizontalAlignment.Center)
+                    .Child(
+                        new StackPanel()
+                            .Spacing(14)
+                            .Children(
+                                UpdateTitleText,
+                                UpdateVersionSubtext,
+                                new TextBlock().Text("CHANGELOG").Foreground(TextGrayBrush).FontSize(11).FontWeight(FontWeight.Bold),
+                                new Border()
+                                    .Background(InputBackgroundBrush)
+                                    .CornerRadius(6)
+                                    .Padding(12)
+                                    .MaxHeight(200)
+                                    .Child(
+                                        new ScrollViewer()
+                                            .Content(UpdateChangelogText)
+                                    ),
+                                UpdateStatusText,
+                                new Grid()
+                                    .Cols("*, 10, *")
+                                    .Children(
+                                        UpdateInstallButton,
+                                        UpdateCloseButton
+                                    )
+                            )
+                    )
+            );
+
+        return UpdateOverlay;
+    }
+
     private Panel CreatePresetOverlay()
     {
         Button LoadBtn = new Button().Content("Load").HorizontalAlignment(HorizontalAlignment.Stretch).HorizontalContentAlignment(HorizontalAlignment.Center).Background(DiscordGreenBrush).Foreground(TextWhiteBrush).Col(0);
@@ -500,14 +723,22 @@ public class MainWindow : Window
 
     private Border CreateTopStatusCard()
     {
+        StopButton = new Button()
+            .Content("Stop")
+            .Background(InputBackgroundBrush)
+            .Foreground(TextGrayBrush)
+            .FontWeight(FontWeight.Bold)
+            .CornerRadius(6)
+            .Padding(new Thickness(12, 8))
+            .IsEnabled(false);
+
         UpdateButton = new Button()
             .Content("Update")
             .Background(AccentRedBrush)
             .Foreground(TextWhiteBrush)
             .FontWeight(FontWeight.Bold)
             .CornerRadius(6)
-            .Padding(new Thickness(15, 8))
-            .Col(2);
+            .Padding(new Thickness(15, 8));
 
         return (Border)new Border()
             .Background(CardBackgroundBrush)
@@ -519,7 +750,14 @@ public class MainWindow : Window
                     .Children(
                         StatusIndicatorDot.Col(0),
                         StatusIndicatorText.Col(1),
-                        UpdateButton
+                        new StackPanel()
+                            .Orientation(Orientation.Horizontal)
+                            .Spacing(8)
+                            .Col(2)
+                            .Children(
+                                StopButton,
+                                UpdateButton
+                            )
                     )
             );
     }

@@ -77,6 +77,10 @@
           "ImageIconKey": "zelda_totk"
         },
         {
+          "GameName": "The Legend of Zelda: Ocarina of Time Remake",
+          "ImageIconKey": "zelda_oot_remake"
+        },
+        {
           "GameName": "Xenoblade Chronicles 3",
           "ImageIconKey": "xc3_v2"
         },

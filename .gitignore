@@ -34,3 +34,8 @@ preset.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+# ==================================
+# Release / Temporary Archives
+# ==================================
+Temp/
+temp/

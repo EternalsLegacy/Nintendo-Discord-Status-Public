@@ -15,12 +15,14 @@ public class DiscordService : IDisposable
 
     private DiscordRpcClient? DiscordClient;
     private Timestamps? GameStartTime;
+    private string? CurrentGameName;
 
     #endregion
 
     #region Public Properties
 
     public bool IsConnected { get; private set; }
+    public bool IsPresenceActive { get; private set; }
 
     #endregion
 
@@ -42,31 +44,50 @@ public class DiscordService : IDisposable
         IsConnected = true;
     }
 
-    public void SetGameStatus(string ConsoleName, string GameName, string CustomText, string LargeImageKey, string SmallImageKey)
+    public void SetGameStatus(string ConsoleName, string GameName, string DetailsText, string StateText, string LargeImageKey, string SmallImageKey)
     {
         if (!IsConnected || DiscordClient == null)
         {
             return;
         }
 
-        string FinalState = CustomText;
+        string FinalDetails = string.IsNullOrWhiteSpace(GameName) ? "Playing" : GameName;
+        string FinalState = string.Empty;
 
         if (GameName == "Home")
         {
             FinalState = "Idling";
             GameStartTime = null;
+            CurrentGameName = GameName;
         }
         else
         {
-            if (GameStartTime == null)
+            if (GameStartTime == null || CurrentGameName != GameName)
             {
                 GameStartTime = Timestamps.Now;
+                CurrentGameName = GameName;
+            }
+
+            bool hasDetails = !string.IsNullOrWhiteSpace(DetailsText);
+            bool hasState = !string.IsNullOrWhiteSpace(StateText);
+
+            if (hasDetails && hasState)
+            {
+                FinalState = $"{DetailsText.Trim()} • {StateText.Trim()}";
+            }
+            else if (hasDetails)
+            {
+                FinalState = DetailsText.Trim();
+            }
+            else if (hasState)
+            {
+                FinalState = StateText.Trim();
             }
         }
 
         RichPresence CurrentPresence = new RichPresence()
         {
-            Details = string.IsNullOrWhiteSpace(GameName) ? "Playing" : GameName,
+            Details = FinalDetails,
             State = string.IsNullOrWhiteSpace(FinalState) ? null : FinalState,
             Timestamps = GameStartTime,
             StatusDisplay = StatusDisplayType.Details
@@ -93,6 +114,7 @@ public class DiscordService : IDisposable
         }
 
         DiscordClient?.SetPresence(CurrentPresence);
+        IsPresenceActive = true;
     }
 
     public void ResetTimer()
@@ -106,6 +128,8 @@ public class DiscordService : IDisposable
         {
             DiscordClient?.ClearPresence();
             GameStartTime = null;
+            CurrentGameName = null;
+            IsPresenceActive = false;
         }
     }
 
