@@ -178,13 +178,16 @@ public static class PresetOverlay
         });
 
         string SubtitleText = BuildSubtitleText(Item);
-        TextStack.Children.Add(new TextBlock
+        if (!string.IsNullOrEmpty(SubtitleText))
         {
-            Text = SubtitleText,
-            FontSize = 11.5,
-            Foreground = UiStyleHelper.ParseBrush(ThemeConstants.TextGrayHex),
-            TextWrapping = TextWrapping.Wrap
-        });
+            TextStack.Children.Add(new TextBlock
+            {
+                Text = SubtitleText,
+                FontSize = 11.5,
+                Foreground = UiStyleHelper.ParseBrush(ThemeConstants.TextGrayHex),
+                TextWrapping = TextWrapping.Wrap
+            });
+        }
 
         Button LoadButton = new Button
         {
@@ -276,6 +279,6 @@ public static class PresetOverlay
 
         return MetadataParts.Count > 0
             ? string.Join(" • ", MetadataParts)
-            : "Ready to apply";
+            : string.Empty;
     }
 }

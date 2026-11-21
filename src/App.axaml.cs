@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using NintendoDiscordStatus.Core.Constants;
 using NintendoDiscordStatus.Core.Models;
 using NintendoDiscordStatus.Core.Presenters;
@@ -39,6 +40,8 @@ public class App : Application
             };
 
             SettingsService Settings = SettingsService.Global;
+            Settings.Load();
+
             LibraryService Library = new LibraryService(HttpClientInstance: SharedHttpClient);
             PresetService Presets = new PresetService();
             SystemTimeProvider TimeProvider = new SystemTimeProvider();
@@ -66,8 +69,19 @@ public class App : Application
             AppMainWindow.RecentGamesUpdatedForTray += (Sender, Args) => RebuildRecentGamesTrayMenu();
 
             Desktop.MainWindow = AppMainWindow;
-            ConfigureTrayIcon(Desktop);
+            ConfigureTrayIcon(Desktop, Settings);
             RebuildRecentGamesTrayMenu();
+
+            Settings.SettingsChanged += (Sender, UpdatedSettings) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (AppTrayIcon != null)
+                    {
+                        AppTrayIcon.IsVisible = UpdatedSettings.MinimizeToTrayOnClose;
+                    }
+                });
+            };
 
             Desktop.Exit += OnDesktopExit;
         }
@@ -75,7 +89,7 @@ public class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private void ConfigureTrayIcon(IClassicDesktopStyleApplicationLifetime Desktop)
+    private void ConfigureTrayIcon(IClassicDesktopStyleApplicationLifetime Desktop, SettingsService Settings)
     {
         NativeMenu TrayMenu = new NativeMenu();
 
@@ -111,7 +125,7 @@ public class App : Application
             Icon = TrayWindowIcon,
             ToolTipText = $"Nintendo Rich Presence v{AppConstants.CurrentVersionString}",
             Menu = TrayMenu,
-            IsVisible = true
+            IsVisible = Settings.Current.MinimizeToTrayOnClose
         };
         AppTrayIcon.Clicked += (Sender, Args) => AppMainWindow?.ShowFromTray();
 
