@@ -9,9 +9,10 @@
     <RootNamespace>NintendoDiscordStatus</RootNamespace>
     <ApplicationIcon>app_icon.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.2.0</Version>
+    <DefaultItemExcludes>$(DefaultItemExcludes);NintendoDiscordStatus.Core\**;NintendoDiscordStatus.Tests\**</DefaultItemExcludes>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -39,4 +40,8 @@
     </None>
     <AvaloniaResource Include="app_icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="NintendoDiscordStatus.Core\NintendoDiscordStatus.Core.csproj" />
+  </ItemGroup>
+
 </Project>
