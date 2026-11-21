@@ -245,6 +245,8 @@ public class UpdateServiceTests
         string ScriptContent = File.ReadAllText(ScriptPath);
         Assert.Contains("$TargetPid = 9999", ScriptContent);
         Assert.Contains("O''Reilly App", ScriptContent);
+        Assert.Contains("Stop-Process -Force", ScriptContent);
+        Assert.Contains("for ($Attempt = 1; $Attempt -le 20; $Attempt++)", ScriptContent);
 
         string TempUpdateFolder = Path.GetDirectoryName(ScriptPath)!;
         Directory.Delete(TempUpdateFolder, true);

@@ -69,6 +69,7 @@ public class MainWindow : Window
     private Button FooterSavePresetButton = null!;
     private Avalonia.Controls.Shapes.Path SaveCurrentIconPath = null!;
     private SettingsWindow? ActiveSettingsWindow;
+    private UpdateWindow? ActiveUpdateWindow;
     private Flyout? ActiveSelectorFlyout;
 
     public MainWindow(
@@ -563,11 +564,11 @@ public class MainWindow : Window
             UiStyleHelper.CreateVectorIcon(UiStyleHelper.UpdateIconData, ThemeConstants.DiscordGreenHex, 18),
             "Update available! Click to install");
         FooterUpdateBadgeButton.IsVisible = false;
-        FooterUpdateBadgeButton.Click += (Sender, Args) =>
+        FooterUpdateBadgeButton.Click += async (Sender, Args) =>
         {
             if (PendingUpdateInfo != null)
             {
-                ShowOverlay(UpdateOverlay.Build(PendingUpdateInfo, Updates, CurrentAccentHex, CloseTopOverlay));
+                await OpenUpdateWindowAsync(PendingUpdateInfo);
             }
         };
 
@@ -1056,7 +1057,27 @@ public class MainWindow : Window
     {
         PendingUpdateInfo = UpdateInfo;
         FooterUpdateBadgeButton.IsVisible = true;
-        ShowOverlay(UpdateOverlay.Build(UpdateInfo, Updates, CurrentAccentHex, CloseTopOverlay));
+        _ = OpenUpdateWindowAsync(UpdateInfo);
+    }
+
+    private async Task OpenUpdateWindowAsync(UpdateInfoModel UpdateInfo)
+    {
+        if (ActiveUpdateWindow != null)
+        {
+            ActiveUpdateWindow.Activate();
+            return;
+        }
+
+        UpdateWindow Dialog = new UpdateWindow(UpdateInfo, Updates, CurrentAccentHex);
+        ActiveUpdateWindow = Dialog;
+        try
+        {
+            await Dialog.ShowDialog(this);
+        }
+        finally
+        {
+            ActiveUpdateWindow = null;
+        }
     }
 
     private async Task OpenSettingsWindowAsync()
@@ -1078,7 +1099,7 @@ public class MainWindow : Window
             {
                 PendingUpdateInfo = UpdateInfo;
                 FooterUpdateBadgeButton.IsVisible = true;
-                ShowOverlay(UpdateOverlay.Build(UpdateInfo, Updates, CurrentAccentHex, CloseTopOverlay));
+                _ = OpenUpdateWindowAsync(UpdateInfo);
             });
 
         ActiveSettingsWindow = Dialog;

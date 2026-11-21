@@ -14,7 +14,11 @@ public static class MarkdownRenderer
 {
     public static StackPanel RenderReleaseNotes(string? MarkdownText)
     {
-        StackPanel Container = new StackPanel { Spacing = 6 };
+        StackPanel Container = new StackPanel
+        {
+            Spacing = 6,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
         List<MarkdownBlock> Blocks = MarkdownParser.Parse(MarkdownText);
 
         foreach (MarkdownBlock Block in Blocks)
@@ -30,19 +34,20 @@ public static class MarkdownRenderer
         switch (Block.Kind)
         {
             case MarkdownBlockKind.Heading1:
-                return BuildFormattedTextBlock(Block.Spans, 17, FontWeight.Bold, ThemeConstants.TextWhiteHex, new Thickness(0, 6, 0, 2));
+                return BuildFormattedTextBlock(Block.Spans, 17, FontWeight.Bold, ThemeConstants.TextWhiteHex, new Thickness(0, 8, 0, 3));
 
             case MarkdownBlockKind.Heading2:
-                return BuildFormattedTextBlock(Block.Spans, 15, FontWeight.Bold, ThemeConstants.TextWhiteHex, new Thickness(0, 6, 0, 2));
+                return BuildFormattedTextBlock(Block.Spans, 15, FontWeight.Bold, ThemeConstants.TextWhiteHex, new Thickness(0, 8, 0, 2));
 
             case MarkdownBlockKind.Heading3:
-                return BuildFormattedTextBlock(Block.Spans, 13.5, FontWeight.SemiBold, ThemeConstants.SubHeadingHex, new Thickness(0, 4, 0, 1));
+                return BuildFormattedTextBlock(Block.Spans, 13.5, FontWeight.SemiBold, ThemeConstants.SubHeadingHex, new Thickness(0, 6, 0, 2));
 
             case MarkdownBlockKind.Bullet:
                 Grid BulletRow = new Grid
                 {
                     ColumnDefinitions = new ColumnDefinitions("Auto, *"),
-                    Margin = new Thickness(6, 1, 0, 1)
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    Margin = new Thickness(4, 2, 0, 2)
                 };
 
                 TextBlock BulletGlyph = new TextBlock
@@ -54,7 +59,7 @@ public static class MarkdownRenderer
                     VerticalAlignment = VerticalAlignment.Top
                 };
 
-                TextBlock BulletContent = BuildFormattedTextBlock(Block.Spans, 12.5, FontWeight.Normal, ThemeConstants.TextGrayHex, new Thickness(0));
+                TextBlock BulletContent = BuildFormattedTextBlock(Block.Spans, 12.5, FontWeight.Normal, "#B8BAC2", new Thickness(0), 19);
                 Grid.SetColumn(BulletContent, 1);
 
                 BulletRow.Children.Add(BulletGlyph);
@@ -62,7 +67,7 @@ public static class MarkdownRenderer
                 return BulletRow;
 
             default:
-                return BuildFormattedTextBlock(Block.Spans, 12.5, FontWeight.Normal, ThemeConstants.TextGrayHex, new Thickness(0, 1));
+                return BuildFormattedTextBlock(Block.Spans, 12.5, FontWeight.Normal, "#B8BAC2", new Thickness(0, 2), 19);
         }
     }
 
@@ -71,7 +76,8 @@ public static class MarkdownRenderer
         double FontSize,
         FontWeight BaseWeight,
         string BaseColorHex,
-        Thickness Margin)
+        Thickness Margin,
+        double LineHeight = double.NaN)
     {
         TextBlock BlockControl = new TextBlock
         {
@@ -79,6 +85,7 @@ public static class MarkdownRenderer
             FontWeight = BaseWeight,
             Foreground = UiStyleHelper.ParseBrush(BaseColorHex),
             TextWrapping = TextWrapping.Wrap,
+            LineHeight = LineHeight,
             Margin = Margin
         };
 

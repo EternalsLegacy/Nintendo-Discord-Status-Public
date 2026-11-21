@@ -194,14 +194,15 @@ public class UpdateService
             }
 
             string ExtractedPayloadDir = Path.GetDirectoryName(ExtractedExe)!;
-            string TargetExePath = Path.Combine(BaseDirectory, AppConstants.ExecutableFileName);
+            string NormalizedInstallDir = BaseDirectory.TrimEnd('\\', '/');
+            string TargetExePath = Path.Combine(NormalizedInstallDir, AppConstants.ExecutableFileName);
             string ScriptPath = Path.Combine(TempDir, "update.ps1");
             int CurrentPid = ProcessRunner.GetCurrentProcessId();
 
             string ScriptContent = BuildUpdaterPowerShellScript(
                 CurrentPid,
                 ExtractedPayloadDir,
-                BaseDirectory,
+                NormalizedInstallDir,
                 TargetExePath,
                 TempDir);
 
@@ -209,7 +210,7 @@ public class UpdateService
 
             ProcessRunner.StartHiddenShell(
                 "powershell.exe",
-                $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{ScriptPath}\"");
+                $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"{ScriptPath}\"");
 
             ProcessRunner.ExitApplication(0);
 
@@ -255,9 +256,23 @@ $TargetPid = {TargetPid}
 while (Get-Process -Id $TargetPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 250
 }}
-Start-Sleep -Milliseconds 350
-Copy-Item -Path '{EscapedPayloadDir}\*' -Destination '{EscapedInstallDir}' -Recurse -Force
-Start-Process -FilePath '{EscapedTargetExe}'
+Get-Process | Where-Object {{ $_.Path -eq '{EscapedTargetExe}' }} | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
+$Copied = $false
+for ($Attempt = 1; $Attempt -le 20; $Attempt++) {{
+    try {{
+        $ErrorActionPreference = 'Stop'
+        Copy-Item -Path '{EscapedPayloadDir}\*' -Destination '{EscapedInstallDir}' -Recurse -Force
+        $Copied = $true
+        break
+    }}
+    catch {{
+        Start-Sleep -Milliseconds 350
+    }}
+}}
+if ($Copied) {{
+    Start-Process -FilePath '{EscapedTargetExe}' -WorkingDirectory '{EscapedInstallDir}'
+}}
 Remove-Item -Path '{EscapedTempDir}' -Recurse -Force -ErrorAction SilentlyContinue
 ";
     }
