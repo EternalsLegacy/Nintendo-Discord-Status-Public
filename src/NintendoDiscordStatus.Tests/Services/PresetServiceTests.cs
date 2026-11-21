@@ -57,6 +57,50 @@ public class PresetServiceTests
         Assert.Equal("Nintendo Switch - Splatoon 3", Service.Presets[0].PresetName);
         Assert.Equal("Raid Night", Service.Presets[1].PresetName);
         Assert.Equal("Tera Raid", Service.Presets[1].Details);
+
+        const string VersionOneJson = """
+            [
+              {
+                "PresetName": "Nintendo Switch - Super Mario Galaxy 2",
+                "Console": " Nintendo Switch ",
+                "Game": " Super Mario Galaxy 2 ",
+                "Details": " Searching Green Stars ",
+                "State": ""
+              },
+              {
+                "PresetName": "Nintendo Wii U - Mario Kart 8",
+                "ConsoleName": "",
+                "GameName": ""
+              },
+              {
+                "PresetName": null,
+                "Console": "Nintendo Wii",
+                "Game": "   ",
+                "Details": null,
+                "State": null
+              },
+              {
+                "PresetName": "Custom Only",
+                "Console": null,
+                "Game": null
+              }
+            ]
+            """;
+
+        File.WriteAllText(PathToPresets, VersionOneJson);
+        Service.Load();
+
+        Assert.Equal(4, Service.Presets.Count);
+        Assert.Equal("Nintendo Switch", Service.Presets[0].ConsoleName);
+        Assert.Equal("Super Mario Galaxy 2", Service.Presets[0].GameName);
+        Assert.Equal("Searching Green Stars", Service.Presets[0].Details);
+        Assert.Equal("Nintendo Wii U", Service.Presets[1].ConsoleName);
+        Assert.Equal("Mario Kart 8", Service.Presets[1].GameName);
+        Assert.Equal("Nintendo Wii", Service.Presets[2].PresetName);
+        Assert.Equal("Nintendo Wii", Service.Presets[2].ConsoleName);
+        Assert.Equal(string.Empty, Service.Presets[2].GameName);
+        Assert.Equal("Custom Only", Service.Presets[3].PresetName);
+        Assert.Equal(string.Empty, Service.Presets[3].ConsoleName);
     }
 
     [Fact]
