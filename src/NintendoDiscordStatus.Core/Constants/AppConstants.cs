@@ -4,8 +4,8 @@ namespace NintendoDiscordStatus.Core.Constants;
 
 public static class AppConstants
 {
-    public static readonly Version CurrentVersion = new Version(1, 2, 0);
-    public const string CurrentVersionString = "1.2.0";
+    public static readonly Version CurrentVersion = new Version(1, 2, 1);
+    public const string CurrentVersionString = "1.2.1";
 
     public const string WindowTitle = "Nintendo Discord Rich Presence";
     public const string DiscordAppId = "1482829273164284106";

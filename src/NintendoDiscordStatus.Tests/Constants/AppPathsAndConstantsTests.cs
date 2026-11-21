@@ -12,8 +12,8 @@ public class AppPathsAndConstantsTests
     [Fact]
     public void AppConstants_ExposeValidVersionTitleAndUrls()
     {
-        Assert.Equal(new Version(1, 2, 0), AppConstants.CurrentVersion);
-        Assert.Equal("1.2.0", AppConstants.CurrentVersionString);
+        Assert.Equal(new Version(1, 2, 1), AppConstants.CurrentVersion);
+        Assert.Equal("1.2.1", AppConstants.CurrentVersionString);
         Assert.Equal("Nintendo Discord Rich Presence", AppConstants.WindowTitle);
         Assert.Equal("Singleplayer", AppConstants.DefaultStateExample);
         Assert.StartsWith("https://", AppConstants.GitHubApiLatestReleaseUrl);

@@ -56,7 +56,7 @@ public class UpdateServiceTests
                 {
                     Content = new StringContent(JsonSerializer.Serialize(new GitHubReleaseModel
                     {
-                        TagName = "v1.2.0",
+                        TagName = "v1.2.1",
                         Body = "Current release"
                     }))
                 };
